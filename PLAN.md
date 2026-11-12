@@ -20,11 +20,17 @@ There are three sub-questions:
 ## 2. Why this question (why)
 
 - **Clinical value.** Central and carotid pressure, and arterial stiffness, predict cardiovascular risk. The arm cuff measures neither. A catheter does, but it is invasive.
-- **The gap.**
-  - The closest prior work, Kissas et al. 2020, used 4D-flow MRI, which is expensive.
-  - Ultrasound is cheap and everywhere, but it gives wall motion well and velocity poorly.
-  - No study we know of asks plainly what is and is not identifiable from ultrasound-type data.
-  - A literature check is still needed before writing.
+- **The gap** (after the Phase 0b literature check, 2026-11-13):
+  - Kissas et al. 2020 (CMAME): 1D PINN with 4D-flow MRI velocity + area; absolute pressure via the elastic wall law.
+  - **Columbia ultrasound group (Konofagou lab; Roy et al. 2023 IEEE, 2024 UFFC-JS, 2025 in-silico/phantom stenosis study, and a human carotid clinical feasibility study)**: PINN + *high-frame-rate* Pulse Wave Imaging wall displacement + Vector Flow Imaging velocity, *linearized* 1D equations, compliance and pressure. They state that absolute accuracy needs invasive validation, and list nonlinear dynamics and 2D/3D models as future work.
+  - Womersley-inspired Fourier features for pulsatile PINNs exist (APS DFD 2021), so the periodic-embedding idea alone is not new.
+  - **What is still open and is our angle:**
+    1. A systematic **identifiability** analysis: which data (wall motion only / + velocity / + one cuff) makes p and β recoverable, with uncertainty. Not addressed in the work above.
+    2. **Conventional low-frame-rate clinical scans** (30 Hz, wall motion at one site, no usable velocity) instead of kHz research sequences.
+    3. **Higher physics fidelity**: nonlinear 1D and axisymmetric NS-PINN with a moving wall (named as future work by the Columbia group), judged against our own 3D NS twin data.
+    4. The **combination** in CPC-PINN (periodic embedding + exact mass conservation + hard tube law), ablated against baselines.
+    5. Fully open code and public data.
+  - Before writing, read the Columbia papers in full and position against them explicitly.
 - **Honesty as a contribution.** Showing that β is *not* identifiable from A alone, and what minimal extra measurement fixes that, is a useful result in itself.
 
 ## 2b. Real-world (physical and medical) benefit, and how it shapes the plan

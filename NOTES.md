@@ -16,3 +16,9 @@
 
 ## 2026-11-13: Phase 1 started
 - Pipeline `scripts/phase1.cmd`: one longitudinal view per subject, then beamforming, then tracking, then a QC figure.
+
+## 2026-11-13: Phase 0b literature (first pass)
+- Closest prior work: the Columbia (Konofagou) group's PINN + Pulse Wave Imaging, which gives carotid compliance and pressure, including a human feasibility study. It uses high-frame-rate data and linearized 1D equations.
+- Kissas 2020 (4D-flow MRI, 1D PINN).
+- Womersley Fourier features (APS DFD 2021).
+- Gap kept: identifiability, conventional 30 Hz scans, nonlinear/axisymmetric NS-PINN, CPC-PINN combination. See PLAN §2.
