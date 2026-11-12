@@ -1,0 +1,10 @@
+data/
+reports/
+logs/
+venv/
+.venv/
+__pycache__/
+*.hdf5
+*.npz
+*.mat
+PRIVATE-NOTES.md

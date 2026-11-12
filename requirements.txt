@@ -1,0 +1,6 @@
+numpy
+scipy
+h5py
+hdf5plugin
+matplotlib
+wfdb
