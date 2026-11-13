@@ -118,3 +118,29 @@
   - full last-cycle A, Q and p (400 frames x 151 nodes)
   - a 5 s, 30 Hz synthetic scan: D at 9 columns over 2 cm, noise sigma 0.03-0.05 mm, random start phase
   - the pressure at the scan points, for evaluation only
+
+## 2026-11-14: Phase 4 pilot: baseline PINNs x data levels (`pulsens/pinn.py`, `scripts/phase4_pilot.py`)
+- Setup:
+  - 10 twin cases, 2 cm scan window x one cycle, inverse fit per case.
+  - Models: B1 tanh MLP, B2 Fourier features, B3 modified MLP. All 4x64, 8000 Adam iterations, 1 seed.
+  - B0: linear cuff scaling of the phase-binned diameter, no PINN.
+  - Ran on the laptop RTX 3070 Ti. 140 fits took 7 h; each PINN fit took 2.5-5.5 min (small model, GPU at low clocks).
+- Fix during the pilot: the raw momentum residual was about 4e4 at the start, so the network collapsed to a flat (dA/dx = 0) solution with shape r = 0.36. The residual is now scaled by its own pressure-gradient term, which gives r = 1.00.
+- Results (median over 10 cases, IQR in brackets):
+
+| Level | Model | p RMSE (mmHg) | abs SBP err | abs DBP err | abs beta err |
+|---|---|---|---|---|---|
+| a: D only | B1 / B2 / B3 | 9.8 / 9.1 / 7.3 | 9-11 | 7-9 | 47% / 22% / 18% |
+| b: + mean velocity | B1 / B2 / B3 | 10.4 / 9.8 / 7.3 | 9-10 | 8 | 24% / 19% / 17% |
+| c: + ideal cuff | B0 | 0.7 [0.6-0.9] | 0 | 0 | n/a |
+| c: + ideal cuff | B1 / B2 / B3 | 0.9 / 0.3 / 0.3 | 0 | 0 | 4% / 1% / 1% |
+| d: + distant cuff | B0 | 4.4 | 7.4 | 1.1 | n/a |
+| d: + distant cuff | B1 / B2 / B3 | 4.7 / 4.0 / 4.3 | 7.4 | 1.1 | 15% / 22% / 18% |
+
+- Findings:
+  1. The pressure shape is recovered at every level (r of at least 0.998).
+  2. Absolute pressure is not identifiable without a cuff (about 8-10 mmHg error). The mean velocity barely helps (beta error 17-24%). Reason: across a 2 cm window, dA/dx is below the noise (transit time about 4 ms against a 33 ms frame period).
+  3. With an ideal cuff, the PINNs beat B0 on pressure (0.3 vs 0.7 mmHg). They also recover the wall stiffness to 1% (B2, B3), which B0 cannot give at all.
+  4. A biased cuff passes straight through: the SBP error is the same as the cuff error, and beta degrades to 15-22%.
+  5. B2 and B3 are better than B1. B3 is the slowest (about 5.5 min per fit).
+- Caveat: in the L1 twin, the tube law makes p linear in D, so B0 is near-ideal by construction. Real walls are viscoelastic and nonlinear (L2/3D twins), which is where B0 should break.
