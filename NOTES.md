@@ -76,3 +76,18 @@
   - Mass conservation: error 2.8e-6 of stroke volume.
   - Carotid RCR case is periodic: cycle-to-cycle change 0.02%. 107/80 mmHg, distension 6.8%.
 - Next: calibrate RCR + beta to Phase 1 / MIMIC ranges (PP ~ 40 mmHg, distension 8-12%), then generate the L1 twin dataset.
+
+## 2026-11-13: Phase 2 / L1 calibrated (`scripts/calibrate_l1.py`, `pulsens/carotid.py`)
+- Targets (mid-segment): PP 40 mmHg, MAP 93 mmHg, diameter distension 10% (Phase 1 median of good subjects).
+- Fixed-point iteration on C (pulse pressure), RT (mean pressure) and wall stiffness (distension). It converged in 12 iterations, about 11 s per run on the home PC.
+- Result: 113/74 mmHg, PP 39.8 mmHg, MAP 93.0, distension 10.2% (D 6.40 to 7.05 mm), cycle-to-cycle change 2e-5.
+- Calibrated values:
+  - beta = 9.19e6 Pa/m (dist_ref 0.101)
+  - c0 = 5.0 m/s
+  - R1 = Z0 = 1.60e8 Pa s/m^3
+  - R2 = 1.90e9
+  - C = 1.96e-10 m^3/Pa
+  - tau = R2*C = 0.37 s
+- Caveats:
+  - The tau is shorter than whole-body values (about 1-1.5 s). Here C stands for the cerebral bed fed by one carotid, so this is acceptable, but tau should be varied in the twin dataset.
+  - There is a small pressure amplification from inlet to outlet (about 2 mmHg), caused by outlet reflection.
