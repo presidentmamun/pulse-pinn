@@ -8,3 +8,12 @@ __pycache__/
 *.npz
 *.mat
 PRIVATE-NOTES.md
+
+# Claude / AI assistant files: never commit
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+**/.claude/
+*claude*.md
+MEMORY.md
+memory/

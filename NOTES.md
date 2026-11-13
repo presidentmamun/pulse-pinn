@@ -63,3 +63,14 @@
 | s03 | 6.90 | 18.2% | - | 0.046 | 1.53 | exclude: vessel tilted 14 deg, probe drift |
 
 - Distension (p5-95) is 5-12%, consistent with healthy adult carotids.
+
+## 2026-11-13: Phase 2 / L1 solver (`pulsens/l1.py`) verified
+- Model: nonlinear 1D (A, Q), tube law p = p_ref + beta (sqrt A - sqrt A0), Poiseuille friction.
+- Scheme: two-step Lax-Wendroff. Characteristic BCs: inlet flow, outlet RCR Windkessel.
+- Verification (`scripts/verify_l1.py`, home PC, under 2 min). All gates pass:
+  - MMS: observed order 2.00 (N = 50 to 400).
+  - Wave speed: 5.078 vs theory 5.015 m/s (+1.2%). The excess is the expected nonlinear u + c effect.
+  - Reflection at a resistive outlet: R = Z0 gives 0.006 (theory 0); 3 Z0 gives 0.522 (0.5); Z0/3 gives -0.509 (-0.5).
+  - Mass conservation: error 2.8e-6 of stroke volume.
+  - Carotid RCR case is periodic: cycle-to-cycle change 0.02%. 107/80 mmHg, distension 6.8%.
+- Next: calibrate RCR + beta to Phase 1 / MIMIC ranges (PP ~ 40 mmHg, distension 8-12%), then generate the L1 twin dataset.
