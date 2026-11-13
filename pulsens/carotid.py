@@ -33,7 +33,8 @@ def beta_from(D0_mm, dist_ref):
 
 
 def run_case(D0_mm=6.5, dist_ref=0.10, RT=None, C=None, HR=60.0, Qmean=6e-6, L=0.15, N=151,
-             p_ref_mmHg=80.0, n_cycles=8, record=False):
+             p_ref_mmHg=80.0, n_cycles=8, record=False, pc0_mmHg=90.0, field_frames=0):
+    """field_frames > 0: also return the full A, Q, p fields on the last cycle, resampled to that many uniform frames."""
     A0, beta = beta_from(D0_mm, dist_ref)
     v = Vessel(L, A0, beta, p_ref=p_ref_mmHg * MMHG)
     q_in, Tc = inflow(HR, Qmean)
@@ -41,8 +42,14 @@ def run_case(D0_mm=6.5, dist_ref=0.10, RT=None, C=None, HR=60.0, Qmean=6e-6, L=0
     R1 = v.Z0
     R2 = RT - R1
     C = C if C is not None else 0.8 / R2
-    s = Solver(v, N, q_in, dict(R1=R1, C=C, R2=R2, p_out=0.0, pc0=90 * MMHG), cfl=0.5)
-    r = s.run(n_cycles * Tc, probes=(0.0, L / 2, L))
+    s = Solver(v, N, q_in, dict(R1=R1, C=C, R2=R2, p_out=0.0, pc0=pc0_mmHg * MMHG), cfl=0.5)
+    if field_frames:
+        s.run((n_cycles - 2) * Tc)
+        r2 = s.run((n_cycles - 1) * Tc, probes=(0.0, L / 2, L))
+        rf = s.run(n_cycles * Tc, probes=tuple(s.x), every=4)
+        r = {k: np.concatenate([r2[k], rf[k][:, [0, (N - 1) // 2, N - 1]] if rf[k].ndim == 2 else rf[k]]) for k in r2}
+    else:
+        r = s.run(n_cycles * Tc, probes=(0.0, L / 2, L))
     t = r["t"]
     last = t > (n_cycles - 1) * Tc
     prev = (t > (n_cycles - 2) * Tc) & ~last
@@ -57,4 +64,9 @@ def run_case(D0_mm=6.5, dist_ref=0.10, RT=None, C=None, HR=60.0, Qmean=6e-6, L=0
     if record:
         out["_trace"] = dict(t=t[last] - t[last][0], p_in=r["p"][last, 0] / MMHG, p_mid=pl, p_out=r["p"][last, 2] / MMHG,
                              D_mid=D, Q_in=r["Q"][last, 0] * 1e6, Q_mid=r["Q"][last, 1] * 1e6)
+    if field_frames:
+        tf = rf["t"] - (n_cycles - 1) * Tc
+        tu = np.linspace(0, Tc, field_frames, endpoint=False)
+        interp = lambda F: np.stack([np.interp(tu, tf, F[:, j], period=Tc) for j in range(F.shape[1])], axis=1)
+        out["_field"] = dict(t=tu, x=s.x.copy(), A=interp(rf["A"]), Q=interp(rf["Q"]), p=interp(rf["p"]))
     return out

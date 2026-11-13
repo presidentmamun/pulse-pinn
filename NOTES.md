@@ -91,3 +91,30 @@
 - Caveats:
   - The tau is shorter than whole-body values (about 1-1.5 s). Here C stands for the cerebral bed fed by one carotid, so this is acceptable, but tau should be varied in the twin dataset.
   - There is a small pressure amplification from inlet to outlet (about 2 mmHg), caused by outlet reflection.
+
+## 2026-11-13: Phase 2 / L1 twin dataset (`scripts/make_twin_l1.py`)
+- Attempt 1: independent Latin hypercube sampling of model parameters, 120 cases, tau 0.3-1.5 s.
+  - It gave unrealistic combinations: PP down to 10 mmHg, and 41 cases below 20 mmHg.
+- Attempt 2: sampling output targets (PP, distension, MAP) and calibrating each case.
+  - Some targets are physically unreachable: the first wave alone gives PP ~ Z0 x flow pulse, so calibration never converged.
+- Final: LHS over parameters, then accept only physiological outputs.
+  - Parameter ranges:
+    - dist_ref 0.04-0.20
+    - D0 5.5-8.5 mm
+    - HR 50-100
+    - Qmean 4-8 mL/s
+    - tau 0.2-0.7 s
+    - MAP 80-110 mmHg
+  - Accepted if PP 25-60 mmHg, distension 3-14% and cycle change < 1%.
+- Result: 200 tried, 106 accepted, 13.4 min with 4 workers (home PC, BelowNormal), 59 MB.
+  - Accepted ranges:
+    - SBP 93-139 mmHg
+    - DBP 58-93 mmHg
+    - PP 25-60 mmHg, median 35
+    - distension 3.2-13.4%, median 8.4
+    - c0 3.6-7.9 m/s
+    - cycle change at most 0.0016
+- Each case stores:
+  - full last-cycle A, Q and p (400 frames x 151 nodes)
+  - a 5 s, 30 Hz synthetic scan: D at 9 columns over 2 cm, noise sigma 0.03-0.05 mm, random start phase
+  - the pressure at the scan points, for evaluation only
