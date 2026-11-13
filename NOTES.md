@@ -41,3 +41,25 @@
 - 5 clean subjects give physiological distension of 9–14%. The three ~34% values are tracking artefacts, not physiology.
 - Fix needed: temporally constrained wall tracking (search near the previous frame's wall, not per frame).
 - s06 and s09: downloads were cut off (curl error 18). Rerun with resume (`scripts/phase1b.cmd`).
+
+## 2026-11-13: Tracker v2 (`scripts/track_long.py`)
+- Old tracker: per-frame search within +-8 mm, so it jumped between tissue layers in s01/s08.
+- v2:
+  - Wall seeds come from the temporal-mean image: the strongest edge 1.5-5.5 mm from the lumen centre (lumen-intima band).
+  - Per frame, the search is sequential: +-0.5 mm of the previous frame's wall, clamped to +-1.2 mm of the seed.
+  - Sub-pixel parabola refinement.
+  - New output `distension_p5_95_pct`, which is robust to outliers.
+- Results (8 subjects):
+
+| Subj | D mean (mm) | Dist p5-95 | HR | Noise (mm) | Column spread (mm) | QC |
+|---|---|---|---|---|---|---|
+| s01 | 6.34 | 11.0% | 69 | 0.034 | 0.49 | good (was a layer jump, now clean, dicrotic notch visible) |
+| s02 | 6.61 | 10.6% | 56 | 0.029 | 0.83 | good |
+| s04 | 7.34 | 8.0% | 62 | 0.050 | 1.03 | fair |
+| s05 | 6.24 | 11.9% | 75 | 0.036 | 0.37 | good |
+| s07 | 5.89 | 10.0% | 55 | 0.059 | 0.41 | good |
+| s08 | 8.13 | 4.7% | 60 | 0.033 | 1.04 | fair (was a layer jump) |
+| s10 | 6.91 | 10.1% | 50 | 0.031 | 0.29 | good |
+| s03 | 6.90 | 18.2% | - | 0.046 | 1.53 | exclude: vessel tilted 14 deg, probe drift |
+
+- Distension (p5-95) is 5-12%, consistent with healthy adult carotids.

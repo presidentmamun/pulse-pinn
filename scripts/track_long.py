@@ -1,4 +1,4 @@
-"""Longitudinal carotid wall tracking -> D(t), distension, HR, QC figure.
+"""Longitudinal carotid wall tracking (v2: mean-image seeds + sequential +-0.5 mm search clamped to +-1.2 mm of the seed, sub-pixel) -> D(t), distension, HR, QC figure.
 usage: python track_long.py <bmode npz> <subject label>"""
 import sys, os, json, numpy as np
 from scipy import ndimage as nd
@@ -21,17 +21,31 @@ def score(col):
 zc = np.array([zs[np.argmax(score(prof[:, c]))] for c in cols])
 zc = nd.median_filter(zc, 15)
 p = np.polyfit(xs[cols], zc, 1); zcf = np.polyval(p, xs[cols]); ang = float(np.degrees(np.arctan(p[0])))
-near = np.full((n, len(cols)), np.nan); far = near.copy(); w = int(8 / dz)
+near = np.full((n, len(cols)), np.nan); far = near.copy(); w = int(8 / dz); hw = max(2, int(round(0.5 / dz))); cw = int(round(1.2 / dz))  # step window, anchor clamp
+def sub(g, i):  # sub-pixel parabola peak around index i
+    if 0 < i < len(g) - 1:
+        d = g[i - 1] - 2 * g[i] + g[i + 1]
+        if d != 0: return i + 0.5 * (g[i - 1] - g[i + 1]) / d
+    return float(i)
+gm = np.gradient(mean, axis=0)
 for k, c in enumerate(cols):
-    i0 = np.searchsorted(zs, zcf[k]); up = slice(max(0, i0 - w), i0); dn = slice(i0, min(len(zs), i0 + w))
+    i0 = np.searchsorted(zs, zcf[k]); a, b = max(1, i0 - w), min(len(zs) - 1, i0 + w)
+    # wall seeds from the temporal-mean image (strongest dark->bright edges around the lumen)
+    # seeds: strongest edge 1.5-5.5 mm from the lumen centre (lumen-intima band; excludes speckle and adventitia)
+    r1, r2 = int(1.5 / dz), int(5.5 / dz)
+    na, nb = max(1, i0 - r2), max(2, i0 - r1); fa, fb = min(len(zs) - 2, i0 + r1), min(len(zs) - 1, i0 + r2)
+    jn = na + int(np.argmin(gm[na:nb, c])); jf = fa + int(np.argmax(gm[fa:fb, c])); sn, sf = jn, jf
     g = np.gradient(db[:, :, c], axis=1)
-    near[:, k] = zs[up][np.argmin(g[:, up], axis=1)]; far[:, k] = zs[dn][np.argmax(g[:, dn], axis=1)]
+    for f in range(n):  # sequential search in +-0.5 mm of the previous frame's wall
+        lo, hi = max(1, jn - hw, sn - cw), min(i0, jn + hw + 1, sn + cw + 1); jn = lo + int(np.argmin(g[f, lo:hi])); near[f, k] = np.interp(sub(-g[f], jn), np.arange(len(zs)), zs)
+        lo, hi = max(i0, jf - hw, sf - cw), min(len(zs) - 1, jf + hw + 1, sf + cw + 1); jf = lo + int(np.argmax(g[f, lo:hi])); far[f, k] = np.interp(sub(g[f], jf), np.arange(len(zs)), zs)
 dperp = (far - near) * np.cos(np.radians(ang)); Dt = np.nanmedian(dperp, axis=1); Ds = savgol_filter(Dt, 7, 2)
 resid = float(np.std(Dt - Ds)); spread = float(np.nanmedian(np.nanstd(dperp, axis=1)))
 x = Ds - Ds.mean(); ac = np.correlate(x, x, "full")[n - 1:]; lo = int(FR * 0.4); kk = lo + int(np.argmax(ac[lo:int(FR * 1.6)])); hr = 60 * FR / kk
 S = dict(subject=lab, file=os.path.basename(sys.argv[1]), vessel_angle_deg=round(ang, 1), lumen_centre_mm=round(float(zc.mean()), 1),
          D_min=round(float(Ds.min()), 2), D_max=round(float(Ds.max()), 2), D_mean=round(float(Ds.mean()), 2),
-         distension_pct=round(float((Ds.max() - Ds.min()) / Ds.min() * 100), 1), HR=round(hr, 1),
+         distension_pct=round(float((Ds.max() - Ds.min()) / Ds.min() * 100), 1),
+         distension_p5_95_pct=round(float((np.percentile(Ds, 95) - np.percentile(Ds, 5)) / np.percentile(Ds, 5) * 100), 1), HR=round(hr, 1),
          frame_noise_mm=round(resid, 3), column_spread_mm=round(spread, 3), autocorr_peak=round(float(ac[kk] / ac[0]), 2))
 json.dump(S, open(os.path.join(REP, f"{lab}_long.json"), "w"), indent=1); print(json.dumps(S))
 np.savez(os.path.join(REP, f"{lab}_long_ts.npz"), t=t, D=Dt, Ds=Ds, near=near, far=far, xs_cols=xs[cols])
