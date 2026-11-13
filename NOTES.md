@@ -22,3 +22,22 @@
 - Kissas 2020 (4D-flow MRI, 1D PINN).
 - Womersley Fourier features (APS DFD 2021).
 - Gap kept: identifiability, conventional 30 Hz scans, nonlinear/axisymmetric NS-PINN, CPC-PINN combination. See PLAN §2.
+
+## 2026-11-13: Phase 1 first pass (8 of 10 subjects)
+- Beamforming ~32 min per subject on the home PC (4 workers, BelowNormal).
+- Longitudinal tracking results (D = diameter, dist = (Dmax-Dmin)/Dmin):
+
+| Subj | Angle | D mean (mm) | Dist | HR | Frame noise (mm) | QC |
+|---|---|---|---|---|---|---|
+| s02 | -3.0 | 6.87 | 13.6% | 56 | 0.070 | good |
+| s04 | 0.0 | 7.45 | 13.2% | 60 | 0.084 | good |
+| s05 | -4.3 | 6.25 | 14.3% | 75 | 0.042 | good |
+| s07 | 1.9 | 6.02 | 9.4% | 55 | 0.052 | good |
+| s10 | 1.7 | 6.99 | 12.7% | 50 | 0.040 | good |
+| s01 | -1.3 | 7.48 | 35.0% | 67 | 0.258 | wall jumps between layers |
+| s08 | -2.1 | 7.60 | 34.3% | 58 | 0.192 | wall jumps between layers |
+| s03 | -13.7 | 6.49 | 33.2% | 72 | 0.075 | tilted vessel, baseline drift |
+
+- 5 clean subjects give physiological distension of 9–14%. The three ~34% values are tracking artefacts, not physiology.
+- Fix needed: temporally constrained wall tracking (search near the previous frame's wall, not per frame).
+- s06 and s09: downloads were cut off (curl error 18). Rerun with resume (`scripts/phase1b.cmd`).
