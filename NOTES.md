@@ -49,7 +49,7 @@
   - Per frame, the search is sequential: +-0.5 mm of the previous frame's wall, clamped to +-1.2 mm of the seed.
   - Sub-pixel parabola refinement.
   - New output `distension_p5_95_pct`, which is robust to outliers.
-- Results (8 subjects):
+- Results (10 subjects; 8 usable):
 
 | Subj | D mean (mm) | Dist p5-95 | HR | Noise (mm) | Column spread (mm) | QC |
 |---|---|---|---|---|---|---|
@@ -61,6 +61,8 @@
 | s08 | 8.13 | 4.7% | 60 | 0.033 | 1.04 | fair (was a layer jump) |
 | s10 | 6.91 | 10.1% | 50 | 0.031 | 0.29 | good |
 | s03 | 6.90 | 18.2% | - | 0.046 | 1.53 | exclude: vessel tilted 14 deg, probe drift |
+| s06 | 7.18 | 8.0% | 60 | 0.026 | 0.34 | good (re-run after truncated download) |
+| s09 | 7.04 | 7.1% | 150? | 0.053 | 1.84 | exclude: vessel tilted 27 deg, HR implausible, weak periodicity (autocorr 0.34) |
 
 - Distension (p5-95) is 5-12%, consistent with healthy adult carotids.
 
