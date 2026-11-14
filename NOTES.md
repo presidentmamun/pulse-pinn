@@ -144,3 +144,13 @@
   4. A biased cuff passes straight through: the SBP error is the same as the cuff error, and beta degrades to 15-22%.
   5. B2 and B3 are better than B1. B3 is the slowest (about 5.5 min per fit).
 - Caveat: in the L1 twin, the tube law makes p linear in D, so B0 is near-ideal by construction. Real walls are viscoelastic and nonlinear (L2/3D twins), which is where B0 should break.
+
+## Batched trainer + Phase 5 first CPC run (2026-11-14)
+- `pulsens/pinn_batch.py`: E independent fits in one GPU program (per-member weights via baddbmm; losses summed; Adam is element-wise, so this equals separate fits).
+  - Check (`scripts/check_batch.py B2 8000`, 10 cases x 4 levels): 40 fits in 5.9 min (8.8 s per fit vs about 226 s single). Medians match the pilot within seed noise: rmse a 8.97/9.11, b 9.27/9.78, c 0.44/0.31, d 3.97/4.02 mmHg (batch/pilot).
+- CPC-PINN v0 (`kind="CPC"`): periodic harmonics K=8 in tau + modified-MLP trunk; Psi potential (A = 1 + 0.2 dPsi/dxi, Q = -0.2 kappa dPsi/dtau + qbar), so mass is exact.
+  - 500 iters: rmse a 6.9, b 6.9, c 2.2, d 5.9 mmHg; |beta| 16-19%.
+  - 8000 iters (45 s per fit): a 13.3, b 13.2, c 0.76, d 3.86 mmHg; |beta| a 77%, b 70%, c 3.7%, d 14.8%; shape r 0.983.
+  - So without a cuff, v0 gets worse with training. The total loss falls below the baselines (0.51 vs about 1.0), which means it fits the diameter noise. Beta drifts, because dA/dx across 2 cm is below the noise.
+  - With a distant cuff (d) it is the best of all models (3.9 mmHg, beta 15%).
+  - Next: control the capacity (smaller K, smoothness in xi), add a held-out column for early stopping, then rerun.
