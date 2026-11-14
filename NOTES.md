@@ -154,3 +154,24 @@
   - So without a cuff, v0 gets worse with training. The total loss falls below the baselines (0.51 vs about 1.0), which means it fits the diameter noise. Beta drifts, because dA/dx across 2 cm is below the noise.
   - With a distant cuff (d) it is the best of all models (3.9 mmHg, beta 15%).
   - Next: control the capacity (smaller K, smoothness in xi), add a held-out column for early stopping, then rerun.
+
+## Phase 5 CPC v1: capacity control (2026-11-14)
+- Changes in `fit_batch`: `K` (number of harmonics), `hold_col` (one scan column held out; each member keeps its best weights by held-out diameter loss, checked every 100 iters from 500 on), `d_floor` (data loss clamped at the noise level so it cannot go below it).
+  - Bug found during testing: a member that was never checked restored its initial weights. Fixed with an `isfinite(best_val)` guard.
+- Run: `phase5_cpc.py 8000 10 CPC 4 6 0.8 CPCv1` (K=4, hold_col=6, d_floor=0.8). 40 fits in 29.3 min (44 s per fit).
+- Medians (10 cases), next to the best baseline:
+
+| Level | CPC v0 | CPC v1 | Best baseline | v1 abs beta err |
+|---|---|---|---|---|
+| a: D only | 13.3 | 7.0 | 7.3 (B3) | 21% |
+| b: + mean velocity | 13.2 | 6.9 | 7.3 (B3) | 19% |
+| c: + ideal cuff | 0.76 | 0.86 | 0.29 (B3) | 6% |
+| d: + distant cuff | 3.86 | 3.85 | 4.02 (B2) | 18% |
+
+- Findings:
+  1. The capacity controls remove the v0 noise overfit: a/b go from 13 to 7 mmHg, slightly better than B3, at about 1/7 of the B3 cost.
+  2. CPC v1 is still the best model at level d (3.85 mmHg), with DBP error 0.96 vs 1.08-1.10 for all baselines.
+  3. With an ideal cuff it is worse than B2/B3 (0.86 vs 0.3 mmHg, beta 6% vs 1%). The floor and the held-out column limit how tightly it can fit when the data is very informative.
+  4. Beta is still not identifiable without a cuff (about 20%). This matches the Phase 4 finding (dA/dx over 2 cm is below the noise), so it is a limit of the data, not of the architecture.
+  5. The 600-iter smoke test (1 case) gave a 5.5 / b 5.7 mmHg, which is better than 8000 iters, so the held-out column may not be selecting the best stopping point.
+- Next: run B3 with the same early stopping (a fair comparison); make d_floor depend on the level (0 when a cuff is present); then a full 106 cases x 3 seeds run.

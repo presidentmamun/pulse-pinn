@@ -59,13 +59,17 @@ class EnsNet(torch.nn.Module):
         return self._f(self.out, h)
 
 
-def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cuda", lr=1e-3, log_every=0):
-    """ds: list of case dicts from pinn.load_case (each already built for its level); levels: list of 'a'..'d'."""
+def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cuda", lr=1e-3, log_every=0,
+              K=8, hold_col=None, d_floor=0.0, check_every=100, check_from=500):
+    """ds: list of case dicts from pinn.load_case (each already built for its level); levels: list of 'a'..'d'.
+    hold_col: index of a scan column kept out of the data loss; each member keeps the weights with the lowest
+    error on it (checked every check_every iters from check_from on). d_floor: the data loss is not pushed below
+    this value (about 1 = the noise level), so the net cannot fit the diameter noise."""
     E = len(ds)
     seeds = seeds if seeds is not None else [0] * E
     torch.manual_seed(int(seeds[0]))
     f = lambda a: torch.tensor(np.asarray(a), dtype=torch.float32, device=dev)
-    net = EnsNet(E, kind, seeds=seeds).to(dev)
+    net = EnsNet(E, kind, seeds=seeds, K=K).to(dev)
     A_s = f([d["A_s"] for d in ds])[:, None]
     Tc = f([d["Tc"] for d in ds])[:, None]
     Q_s = 1e-5
@@ -77,6 +81,11 @@ def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cu
     sched = torch.optim.lr_scheduler.ExponentialLR(opt, gamma=0.1 ** (1 / iters))
     zd = torch.stack([f(np.stack([d["xi"] for d in ds])), f(np.stack([d["tau"] for d in ds]))], -1)
     Ad = f(np.stack([d["A"] for d in ds])) / A_s
+    wtr = torch.ones_like(Ad[:1]); hold = None
+    if hold_col is not None:
+        cols = np.unique(ds[0]["xi"])
+        hold = f(np.isclose(ds[0]["xi"], cols[hold_col]))[None]
+        wtr = 1 - hold
     isb = f([lv == "b" for lv in levels])
     isc = f([lv in ("c", "d") for lv in levels])
     nu = len(ds[0]["tau_mid"])
@@ -90,6 +99,9 @@ def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cu
         kappa = A_s * LX / (Q_s * Tc)
         qbar = torch.full((E, 1), 0.6, device=dev, requires_grad=True)
         opt.add_param_group(dict(params=[qbar]))
+    P = list(net.parameters()) + [lb, la0] + ([qbar] if cpc else [])
+    best = [q.detach().clone() for q in P]
+    best_val = torch.full((E,), float("inf"), device=dev)
 
     def fields(z):
         if not cpc:
@@ -121,15 +133,28 @@ def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cu
         r_mom = gQ[..., 1] + (Tc / Q_s) * ((Q_s ** 2 / (A_s * LX)) * g2[..., 0] + A / RHO * dpdx + KR * Q_s * Qh / A)
         r_mom = r_mom / M_mom
         Ahd, _ = fields(zd)
-        loss_d = torch.mean(((Ahd - Ad) / SIG_A) ** 2, 1)
-        loss = loss_d + torch.mean(r_mass ** 2, 1) + torch.mean(r_mom ** 2, 1)
+        res2 = ((Ahd - Ad) / SIG_A) ** 2
+        loss_d = (res2 * wtr).sum(1) / wtr.sum(1)
+        loss = torch.clamp(loss_d, min=d_floor) + torch.mean(r_mass ** 2, 1) + torch.mean(r_mom ** 2, 1)
         Au, Qu = fields(zu)
         loss = loss + isb * torch.mean(((Qu * Q_s / (Au * A_s) - ud) / SIG_U) ** 2, 1)
         pc, _ = pressure(fields(zc_eval)[0])
         loss = loss + isc * (((pc.max(1).values - cuff[:, 0]) / SIG_P) ** 2 + ((pc.min(1).values - cuff[:, 1]) / SIG_P) ** 2)
         opt.zero_grad(); loss.sum().backward(); opt.step(); sched.step()
+        if hold is not None and it >= check_from and (it % check_every == 0 or it == iters - 1):
+            with torch.no_grad():
+                val = (res2.detach() * hold).sum(1) / hold.sum(1)
+                imp = val < best_val
+                best_val = torch.where(imp, val, best_val)
+                for q, b in zip(P, best):
+                    b[imp] = q.detach()[imp]
         if log_every and it % log_every == 0:
-            print(f"  it {it} loss median {float(loss.median()):.3f} ({time.time() - t0:.0f} s)", flush=True)
+            print(f"  it {it} loss median {float(loss.detach().median()):.3f} ({time.time() - t0:.0f} s)", flush=True)
+    if hold is not None:
+        with torch.no_grad():
+            ok = torch.isfinite(best_val)        # members never checked keep their last weights
+            for q, bb in zip(P, best):
+                q[ok] = bb[ok]
     outs = []
     with torch.no_grad():
         for i, d in enumerate(ds):
@@ -141,5 +166,7 @@ def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cu
             c0 = np.sqrt(b / (2 * RHO)) * sqA0 ** 0.5
             m = metrics(d, pe, b, c0)
             m.update(loss=float(loss[i].detach()), loss_data=float(loss_d[i].detach()), secs=round((time.time() - t0) / E, 1))
+            if hold is not None:
+                m["val_best"] = float(best_val[i])
             outs.append(m)
     return outs
