@@ -175,3 +175,24 @@
   4. Beta is still not identifiable without a cuff (about 20%). This matches the Phase 4 finding (dA/dx over 2 cm is below the noise), so it is a limit of the data, not of the architecture.
   5. The 600-iter smoke test (1 case) gave a 5.5 / b 5.7 mmHg, which is better than 8000 iters, so the held-out column may not be selecting the best stopping point.
 - Next: run B3 with the same early stopping (a fair comparison); make d_floor depend on the level (0 when a cuff is present); then a full 106 cases x 3 seeds run.
+
+## Phase 5: B3 with early stopping, and CPC v2 with a level-specific floor (2026-11-14)
+- `d_floor` can now be one value per member. `phase5_cpc.py` takes a floor such as `0.8ab`, which applies the floor only to levels a and b, with 0 at c and d.
+- Runs (8000 iters, 10 cases x 4 levels):
+  - `phase5_cpc.py 8000 10 B3 8 6 0 B3es`: B3 with the same held-out-column early stopping, no floor. 16 s per fit.
+  - `phase5_cpc.py 8000 10 CPC 4 6 0.8ab CPCv2`: 44 s per fit.
+- Medians (rmse mmHg; abs beta error in brackets):
+
+| Level | B3 | B3es | CPC v1 | CPC v2 |
+|---|---|---|---|---|
+| a: D only | 7.28 (18%) | 7.63 (23%) | 7.02 (21%) | 7.02 (21%) |
+| b: + mean velocity | 7.33 (18%) | 6.49 (24%) | 6.94 (19%) | 6.94 (19%) |
+| c: + ideal cuff | 0.29 (1%) | 0.31 (1%) | 0.86 (6%) | 0.38 (2%) |
+| d: + distant cuff | 4.25 (18%) | 4.44 (19%) | 3.85 (18%) | 3.57 (20%) |
+
+- Findings:
+  1. Removing the floor at c/d fixes most of the CPC ideal-cuff gap: 0.86 to 0.38 mmHg, beta 6% to 2% (B3 0.29).
+  2. CPC v2 is the best model at level d (3.57 vs 4.25 B3, 4.02 B2), with the lowest DBP error (0.94).
+  3. Early stopping alone does not explain the CPC gain: B3es is worse than B3 at a and d, better only at b (6.49, the best b result).
+  4. Without a cuff all models are within about 1 mmHg and beta stays around 20%. This is still the data limit from Phase 4.
+- Next: full 106 cases x 3 seeds for B2, B3, CPC v2; then L2/3D twins.

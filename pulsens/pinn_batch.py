@@ -64,12 +64,13 @@ def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cu
     """ds: list of case dicts from pinn.load_case (each already built for its level); levels: list of 'a'..'d'.
     hold_col: index of a scan column kept out of the data loss; each member keeps the weights with the lowest
     error on it (checked every check_every iters from check_from on). d_floor: the data loss is not pushed below
-    this value (about 1 = the noise level), so the net cannot fit the diameter noise."""
+    this value (about 1 = the noise level), so the net cannot fit the diameter noise. A scalar, or one value per member."""
     E = len(ds)
     seeds = seeds if seeds is not None else [0] * E
     torch.manual_seed(int(seeds[0]))
     f = lambda a: torch.tensor(np.asarray(a), dtype=torch.float32, device=dev)
     net = EnsNet(E, kind, seeds=seeds, K=K).to(dev)
+    floor = f(np.broadcast_to(np.asarray(d_floor, dtype=np.float32), (E,)).copy())
     A_s = f([d["A_s"] for d in ds])[:, None]
     Tc = f([d["Tc"] for d in ds])[:, None]
     Q_s = 1e-5
@@ -135,7 +136,7 @@ def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cu
         Ahd, _ = fields(zd)
         res2 = ((Ahd - Ad) / SIG_A) ** 2
         loss_d = (res2 * wtr).sum(1) / wtr.sum(1)
-        loss = torch.clamp(loss_d, min=d_floor) + torch.mean(r_mass ** 2, 1) + torch.mean(r_mom ** 2, 1)
+        loss = torch.maximum(loss_d, floor) + torch.mean(r_mass ** 2, 1) + torch.mean(r_mom ** 2, 1)
         Au, Qu = fields(zu)
         loss = loss + isb * torch.mean(((Qu * Q_s / (Au * A_s) - ud) / SIG_U) ** 2, 1)
         pc, _ = pressure(fields(zc_eval)[0])
