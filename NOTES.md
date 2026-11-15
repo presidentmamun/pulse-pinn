@@ -196,3 +196,18 @@
   3. Early stopping alone does not explain the CPC gain: B3es is worse than B3 at a and d, better only at b (6.49, the best b result).
   4. Without a cuff all models are within about 1 mmHg and beta stays around 20%. This is still the data limit from Phase 4.
 - Next: full 106 cases x 3 seeds for B2, B3, CPC v2; then L2/3D twins.
+
+## 2026-11-15: Phase 5 full run, seed 0 (106 cases x 4 levels, 8000 iters, E=40)
+Medians of absolute errors (pressure in mmHg, beta in %):
+
+| Level | Model | RMSE | SBP | DBP | beta | s/fit |
+|---|---|---|---|---|---|---|
+| a | B2 / B3 / CPCv2 | 9.03 / 8.63 / 9.04 | 9.3 / 8.7 / 8.0 | 8.6 / 9.0 / 9.2 | 43 / 37 / 34 | 7 / 15 / 44 |
+| b | B2 / B3 / CPCv2 | 9.30 / 8.50 / 8.67 | 10.6 / 8.6 / 8.2 | 8.4 / 8.9 / 8.5 | 41 / 36 / 34 | |
+| c | B2 / B3 / CPCv2 | 0.62 / 0.73 / 0.83 | 0.02 / 0.01 / 0.04 | 0.02 / 0.01 / 0.04 | 1.9 / 2.6 / 5.8 | |
+| d | B2 / B3 / CPCv2 | 4.73 / 5.07 / 5.06 | 7.2 / 7.1 / 7.3 | 1.0 / 1.0 / 1.4 | 17 / 15 / 23 | |
+
+Paired RMSE (CPCv2 better than B3): a 44%, b 47%, c 21%, d 59% of cases.
+- Identifiability holds: diameter alone (a, b) gives ~9 mmHg; a cuff (c) gives <1 mmHg. A distant cuff (d) leaves an SBP bias of ~7 mmHg for every model.
+- CPCv2 does not beat the baselines on the full set. It only slightly improves beta at a/b, it is worse at c, and it is ~3x slower than B3. The pilot (first cases) was optimistic.
+- Results are on HF: presidentmamun/pulse-pinn-twin-l1.
