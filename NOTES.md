@@ -211,3 +211,23 @@ Paired RMSE (CPCv2 better than B3): a 44%, b 47%, c 21%, d 59% of cases.
 - Identifiability holds: diameter alone (a, b) gives ~9 mmHg; a cuff (c) gives <1 mmHg. A distant cuff (d) leaves an SBP bias of ~7 mmHg for every model.
 - CPCv2 does not beat the baselines on the full set. It only slightly improves beta at a/b, it is worse at c, and it is ~3x slower than B3. The pilot (first cases) was optimistic.
 - Results are on HF: presidentmamun/pulse-pinn-twin-l1.
+
+## 2026-11-15: Phase 5 full run, 3 seeds (B2, B3; 106 cases x 4 levels x seeds 0-2)
+Per case, errors are averaged over the 3 seeds, then the median over cases is taken. RMSE has a 95% bootstrap CI over cases. Seed SD is the median per-case SD of RMSE across seeds.
+
+| Level | Model | RMSE [95% CI] | SBP | DBP | beta % | seed SD | n |
+|---|---|---|---|---|---|---|---|
+| a | B2 | 9.48 [8.57, 10.44] | 9.20 | 8.57 | 39 | 1.11 | 106 |
+| a | B3 | 9.27 [8.00, 9.96] | 10.07 | 8.81 | 38 | 1.37 | 106 |
+| b | B2 | 9.42 [8.45, 10.09] | 10.18 | 8.44 | 43 | 0.97 | 106 |
+| b | B3 | 8.97 [7.77, 10.12] | 9.83 | 8.67 | 36 | 1.61 | 106 |
+| c | B2 | 0.62 [0.51, 0.92] | 0.02 | 0.03 | 2 | 0.22 | 106 |
+| c | B3 | 0.67 [0.45, 1.18] | 0.02 | 0.01 | 3 | 0.12 | 106 |
+| d | B2 | 5.02 [4.70, 5.15] | 7.40 | 1.05 | 17 | 0.79 | 106 |
+| d | B3 | 5.19 [4.98, 5.40] | 7.44 | 1.06 | 16 | 0.87 | 106 |
+
+Paired (seed-averaged RMSE), B3 better than B2: a 49%, b 42%, c 44%, d 42% of cases.
+- The seed-0 picture holds with 3 seeds: the data level decides the error, not the architecture. B2 and B3 CIs overlap at every level.
+- Without a cuff (a, b) the error is ~9 mmHg and beta ~40%; mean velocity (b) does not help. An ideal cuff (c) gives <1 mmHg; a distant cuff (d) leaves the ~7 mmHg SBP bias.
+- Seed spread (~1-1.6 mmHg at a/b) is large compared with the B2-B3 gap, so single-seed model rankings are not reliable.
+- Next (overnight 15->16 Nov): CPCv2 seed 1; level-d SBP bias correction test (B3dc, subtract 7.5 mmHg).

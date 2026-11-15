@@ -80,7 +80,7 @@ Each fit uses 8000 Adam iterations. Results columns:
 - `secs`, plus the run settings
 
 ## Status
-Work in progress. Seed 0 is complete for B2, B3 and CPCv2 (106 cases x 4 levels each). More seeds will follow. The numbers are not final and are not yet peer reviewed.
+Work in progress. B2 and B3 are complete for seeds 0-2, and CPCv2 for seed 0 (106 cases x 4 levels each). More CPCv2 seeds will follow. The numbers are not final and are not yet peer reviewed.
 
 ## Licence and citation
 CC BY 4.0. The cases are fully synthetic and were made with our own solver. They contain no patient data.
