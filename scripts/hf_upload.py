@@ -27,14 +27,18 @@ try:
         for r in rows:
             f.write(json.dumps(r) + "\n")
     n_res = 0  # copy only complete lines: the file may be appended to by a running job
-    with open(os.path.join(R, "reports", "phase5", "full.jsonl")) as fi, \
-         open(os.path.join(stage, "results", "phase5_full.jsonl"), "w") as fo:
-        for s in fi:
-            try:
-                json.loads(s)
-            except ValueError:
+    with open(os.path.join(stage, "results", "phase5_full.jsonl"), "w") as fo:
+        for name in ("full.jsonl", "dcorr.jsonl"):
+            src = os.path.join(R, "reports", "phase5", name)
+            if not os.path.exists(src):
                 continue
-            fo.write(s if s.endswith("\n") else s + "\n"); n_res += 1
+            with open(src) as fi:
+                for s in fi:
+                    try:
+                        json.loads(s)
+                    except ValueError:
+                        continue
+                    fo.write(s if s.endswith("\n") else s + "\n"); n_res += 1
 
     api = HfApi()
     api.create_repo(REPO, repo_type="dataset", private=not PUBLIC, exist_ok=True)

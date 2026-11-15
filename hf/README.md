@@ -67,6 +67,7 @@ Sampled parameter ranges:
 - **b**: a + mean velocity at the middle column
 - **c**: a + an ideal cuff SBP/DBP at the same site
 - **d**: a + a biased cuff at a distant site (SBP +5 to +10, DBP ±2 mmHg)
+- **dc** (model `B3dc`): level d with the cuff SBP shifted by a fixed -7.5 mmHg prior (columns `shift`, `cuff_bias_sbp`)
 
 ### Models in `results`
 - **B2**: Fourier-feature MLP
@@ -80,7 +81,7 @@ Each fit uses 8000 Adam iterations. Results columns:
 - `secs`, plus the run settings
 
 ## Status
-Work in progress. B2 and B3 are complete for seeds 0-2, and CPCv2 for seed 0 (106 cases x 4 levels each). More CPCv2 seeds will follow. The numbers are not final and are not yet peer reviewed.
+Work in progress. B2 and B3 are complete for seeds 0-2, CPCv2 for seeds 0-1 (106 cases x 4 levels each), and B3dc for seeds 0-2. The numbers are not final and are not yet peer reviewed.
 
 ## Licence and citation
 CC BY 4.0. The cases are fully synthetic and were made with our own solver. They contain no patient data.

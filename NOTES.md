@@ -231,3 +231,26 @@ Paired (seed-averaged RMSE), B3 better than B2: a 49%, b 42%, c 44%, d 42% of ca
 - Without a cuff (a, b) the error is ~9 mmHg and beta ~40%; mean velocity (b) does not help. An ideal cuff (c) gives <1 mmHg; a distant cuff (d) leaves the ~7 mmHg SBP bias.
 - Seed spread (~1-1.6 mmHg at a/b) is large compared with the B2-B3 gap, so single-seed model rankings are not reliable.
 - Next (overnight 15->16 Nov): CPCv2 seed 1; level-d SBP bias correction test (B3dc, subtract 7.5 mmHg).
+
+## 2026-11-16: overnight run: CPCv2 seed 1, and level-d cuff-bias correction (B3dc)
+
+Driver scripts/overnight_1115.py. Chain done at 05:49 with no errors. Numbers are medians over 106 cases, with 95% bootstrap CIs (2000 resamples).
+
+CPCv2 seed 1 (seed 0 in brackets for comparison). RMSE in mmHg; |beta error| relative.
+
+| Level | RMSE s1 [CI] | RMSE s0 | SBP err s1 | abs beta err s1 |
+|---|---|---|---|---|
+| a | 9.04 [7.62, 9.91] | 9.04 | -0.75 | 0.336 |
+| b | 8.42 [7.81, 10.11] | 8.67 | -1.41 | 0.345 |
+| c | 0.79 [0.51, 1.70] | 0.83 | 0.03 | 0.052 |
+| d | 5.77 [4.83, 6.50] | 5.06 | 7.63 | 0.223 |
+
+- Levels a/b: CPCv2 roughly removes the SBP bias (about -5 to -7 with B2/B3, about -1 with CPCv2), but its RMSE CIs overlap B2/B3 (9.3-9.5 at level a). The two seeds agree within about 0.3 mmHg at a/b/c.
+- Levels c/d: CPCv2 is worse than B2/B3 on beta (5% vs 2-3% at level c; 22% vs 16-17% at level d). At level d, seed 1 RMSE is 0.7 mmHg higher than seed 0.
+
+B3dc (B3 at level d, with the cuff SBP shifted by -7.5 mmHg; 3 seeds, same rng as level d):
+
+- RMSE 1.37 [1.26, 1.57] vs B3 level d 5.19 [4.98, 5.40].
+- Paired median difference -3.73 [-4.00, -3.66]; B3dc is better in 106/106 cases.
+- SBP err -0.08 (was +7.44). abs beta err 0.045 (was 0.156).
+- Caveat: 7.5 mmHg is the mean of the twin's simulated bias (mean actual bias 7.48), so this is an oracle-ish prior. The next step is a sensitivity sweep over shift = 0, 2.5, 5, 10 and a per-case misspecified bias.
