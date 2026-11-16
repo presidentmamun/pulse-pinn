@@ -319,3 +319,33 @@ correction (and its shift sweep) is the relevant fix for both. All four models x
   pressure only 11 mmHg (absolute pressure unidentifiable without a cuff, as on the twin). Real data-loss ~35 vs ~1 on the
   twin: beat-to-beat variability the twin does not have -> plan: realistic-noise twin and beat-by-beat fits.
 - Overnight chain `scripts/overnight_1117.py` (01:05): B3 + CPCv2 x 3 seeds (a, c), cuff sensitivity, then CPCv2dc on the twin.
+
+## 2026-11-17 (morning): overnight results (chain 01:05-06:16, all steps rc=0)
+
+### Real data, level c (ASSUMED cuff 120/80), 3 seeds each: local PWV c0 (m/s)
+| subject | HR | distension % | B3 c0 (mean±sd) | CPCv2 c0 | Bramwell-Hill PWV (PP 40 mmHg, same distension) | B3 data loss |
+|---|---|---|---|---|---|---|
+| s01 | 70 | 11.3 | 4.13±0.26 | 3.79±0.33 | 4.59 | 61 |
+| s02 | 56 | 12.0 | 3.71±0.12 | 4.44±0.00 | 4.45 | 60 |
+| s04 | 62 | 6.3 | 1.91±0.12 | 4.41±0.01 | 6.22 | 84 |
+| s05 | 76 | 10.7 | 3.48±0.08 | 3.39±0.12 | 4.72 | 34 |
+| s06 | 60 | 6.2 | 3.58±0.36 | 4.65±0.01 | 6.27 | 37 |
+| s07 | 52 | 12.3 | 4.16±0.07 | 3.92±0.01 | 4.39 | 103 |
+| s08 | 59 | 6.3 | 3.34±0.08 | 4.11±0.02 | 6.22 | 38 |
+| s10 | 51 | 10.6 | 4.92±0.21 | 4.02±0.15 | 4.75 | 41 |
+Medians: B3 3.65, CPCv2 4.06 m/s; B3 vs CPCv2 differ by 0.83 m/s on average (on the twin they agreed within 0.4 mmHg).
+Seeds agree well (sd mostly < 0.3 m/s). Level a pulse pressure is 1-16 mmHg (unidentifiable without a cuff, as on the twin).
+
+Findings to follow up:
+1. The PINN compresses the range: Bramwell-Hill gives 4.4-6.3 m/s (stiffer = less distension = faster), the PINN 3.4-4.9,
+   and B3 gives an implausible 1.9 m/s for s04. Low-distension (stiffer) subjects are underestimated most.
+   Candidate causes: data loss 34-103 vs ~1 on the twin (beat-to-beat variability, tracking noise), c0 defined at A0 (not the
+   mean area), and the single-period fold. Next: beat-by-beat fits and a realistic-noise twin to see whether the bias appears there.
+2. Model choice matters on real data but not on the twin: a sign that the twin is too clean.
+
+### Cuff-assumption sensitivity (B3, median c0 over 8 subjects): 110/70 -> 3.75, 120/80 -> 3.65, 130/85 -> 3.57 m/s.
+Changing the assumed cuff by about 10 mmHg moves the median by about 0.1 m/s (3%); per subject up to 0.35 m/s.
+
+### Twin: cuff-bias correction for CPCv2 (CPCv2dc, prior 7.5 mmHg, seeds 0-2, 318 fits)
+RMSE 1.68 [1.45, 1.89] vs CPCv2 level d 5.26; paired difference -3.76 [-3.97, -3.54]; better in 292/318 (92%); SBP err -0.2.
+The correction works for both models (B3dc: 1.38, better in 316/318).
