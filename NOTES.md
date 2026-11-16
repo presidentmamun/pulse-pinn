@@ -309,3 +309,13 @@ Pooled over seeds 0-2 (318 fits per level; bootstrap CI over fits), with B3 pool
 CPCv2 and B3 are statistically indistinguishable at every level (CIs overlap; per-level median differences under
 0.4 mmHg). The level-d cuff bias (+7.5 mmHg SBP) affects CPCv2 exactly as it affects B3, so the B3dc cuff-bias
 correction (and its shift sweep) is the relevant fix for both. All four models x 3 seeds are now available for the paper's main table.
+
+## 2026-11-17 (night): Phase 6 started — real carotid data in twin layout
+- `scripts/phase6_real.py`: each Phase 1 subject (reports/phase1/sNN_long_ts.npz, copied from the home PC) becomes a twin-shaped
+  case (9 sites 2.5 mm apart over the central 20 mm, 5-column median D(t), cardiac period from autocorrelation). Levels a and c;
+  level c uses an ASSUMED population cuff (120/80, plus 110/70 and 130/85 for sensitivity). `fit_batch(..., return_pred=True)`
+  now returns the pressure estimate, beta, c0 and A0. 8 subjects (s03, s09 excluded in Phase 1).
+- Smoke test s05 (2000 iters): level c 123/80 mmHg, c0 = 4.7 m/s (plausible for a young healthy carotid); level a pulse
+  pressure only 11 mmHg (absolute pressure unidentifiable without a cuff, as on the twin). Real data-loss ~35 vs ~1 on the
+  twin: beat-to-beat variability the twin does not have -> plan: realistic-noise twin and beat-by-beat fits.
+- Overnight chain `scripts/overnight_1117.py` (01:05): B3 + CPCv2 x 3 seeds (a, c), cuff sensitivity, then CPCv2dc on the twin.

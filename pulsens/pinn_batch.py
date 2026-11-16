@@ -60,7 +60,7 @@ class EnsNet(torch.nn.Module):
 
 
 def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cuda", lr=1e-3, log_every=0,
-              K=8, hold_col=None, d_floor=0.0, check_every=100, check_from=500):
+              K=8, hold_col=None, d_floor=0.0, check_every=100, check_from=500, return_pred=False):
     """ds: list of case dicts from pinn.load_case (each already built for its level); levels: list of 'a'..'d'.
     hold_col: index of a scan column kept out of the data loss; each member keeps the weights with the lowest
     error on it (checked every check_every iters from check_from on). d_floor: the data loss is not pushed below
@@ -169,5 +169,7 @@ def fit_batch(ds, levels, kind="B1", iters=8000, n_col=2048, seeds=None, dev="cu
             m.update(loss=float(loss[i].detach()), loss_data=float(loss_d[i].detach()), secs=round((time.time() - t0) / E, 1))
             if hold is not None:
                 m["val_best"] = float(best_val[i])
+            if return_pred:   # real data has no truth: keep the estimate itself
+                m.update(p_pred_mmHg=(pe / MMHG).round(2).tolist(), beta=b, c0=float(c0), A0=sqA0 ** 2)
             outs.append(m)
     return outs
