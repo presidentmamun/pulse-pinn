@@ -294,3 +294,18 @@ and this curve as the sensitivity analysis. Next: same sweep for seeds 1-2 if CI
 The seed-0 conclusions hold across seeds: every prior beats no correction in at least 97% of fits, the curve is the
 same shape in each seed (seed-to-seed spread of the median under 0.45 mmHg), and over-shooting (10) costs less than
 under-shooting by the same amount (2.5 or 5). This table replaces the seed-0-only table as the sensitivity result for the paper.
+
+## 2026-11-17: CPCv2 seed 2 done (overnight 18:33-00:00, 424 fits, no errors) — CPCv2 now complete for seeds 0-2
+
+Pooled over seeds 0-2 (318 fits per level; bootstrap CI over fits), with B3 pooled medians for comparison:
+
+| Level | CPCv2 median RMSE [95% CI] | SBP err | abs beta err | per-seed median (s0, s1, s2) | B3 median |
+|---|---|---|---|---|---|
+| a | 9.03 [7.95, 9.40] | -0.85 | 0.340 | 9.04, 9.04, 8.88 | 9.10 |
+| b | 8.47 [7.93, 9.22] | -1.27 | 0.348 | 8.67, 8.42, 8.40 | 8.84 |
+| c | 0.79 [0.62, 0.99] | +0.03 | 0.057 | 0.83, 0.79, 0.75 | 0.73 |
+| d | 5.26 [5.03, 5.86] | +7.56 | 0.226 | 5.06, 5.77, 5.54 | 5.29 |
+
+CPCv2 and B3 are statistically indistinguishable at every level (CIs overlap; per-level median differences under
+0.4 mmHg). The level-d cuff bias (+7.5 mmHg SBP) affects CPCv2 exactly as it affects B3, so the B3dc cuff-bias
+correction (and its shift sweep) is the relevant fix for both. All four models x 3 seeds are now available for the paper's main table.

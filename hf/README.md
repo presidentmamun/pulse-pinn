@@ -81,7 +81,7 @@ Each fit uses 8000 Adam iterations. Results columns:
 - `secs`, plus the run settings
 
 ## Status
-Work in progress. B2 and B3 are complete for seeds 0-2, CPCv2 for seeds 0-1 (106 cases x 4 levels each), B3dc (shift 7.5) for seeds 0-2, and the B3dc shift sweep (2.5, 5, 10) for seeds 0-2. The numbers are not final and are not yet peer reviewed.
+Work in progress. B2 and B3 are complete for seeds 0-2, CPCv2 for seeds 0-2 (106 cases x 4 levels each), B3dc (shift 7.5) for seeds 0-2, and the B3dc shift sweep (2.5, 5, 10) for seeds 0-2. The numbers are not final and are not yet peer reviewed.
 
 ## Licence and citation
 CC BY 4.0. The cases are fully synthetic and were made with our own solver. They contain no patient data.
