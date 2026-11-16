@@ -277,3 +277,20 @@ Takeaways: (1) every prior tested beats no correction in >=100/106 cases, so the
 (2) the residual SBP error tracks the prior's bias almost one-to-one and is partly absorbed (slope < 1);
 (3) over- and under-shooting by ~2.5 mmHg cost about the same. For the paper, report B3dc with a population prior
 and this curve as the sensitivity analysis. Next: same sweep for seeds 1-2 if CIs are needed per shift.
+
+## 2026-11-16 (evening): shift sweep repeated for seeds 1-2 (B3dc, level d)
+
+`scripts/shift_sweep_s12.py` ran shifts 2.5, 5 and 10 for seeds 1 and 2 (14:46-17:53, no errors). Pooled over seeds 0-2
+(318 fits per row; CIs are bootstrap over fits; paired difference is per case and seed against plain level d):
+
+| shift | median RMSE [95% CI] | median SBP err | median abs beta err | paired diff vs level d [95% CI] | better | per-seed median RMSE (s0, s1, s2) |
+|---|---|---|---|---|---|---|
+| 0 (level d) | 5.29 [5.06, 5.45] | +7.34 | 0.159 | - | - | 5.07, 5.53, 5.15 |
+| 2.5 | 3.74 [3.52, 3.95] | +4.86 | 0.103 | -1.49 [-1.53, -1.47] | 309/318 | 3.56, 3.98, 3.65 |
+| 5 | 2.37 [2.14, 2.56] | +2.36 | 0.053 | -2.93 [-2.97, -2.89] | 315/318 | 2.16, 2.59, 2.36 |
+| 7.5 | 1.38 [1.30, 1.48] | -0.15 | 0.055 | -3.99 [-4.11, -3.83] | 316/318 | 1.40, 1.37, 1.33 |
+| 10 | 1.88 [1.72, 1.97] | -2.67 | 0.110 | -3.76 [-4.16, -3.43] | 311/318 | 1.94, 1.92, 1.82 |
+
+The seed-0 conclusions hold across seeds: every prior beats no correction in at least 97% of fits, the curve is the
+same shape in each seed (seed-to-seed spread of the median under 0.45 mmHg), and over-shooting (10) costs less than
+under-shooting by the same amount (2.5 or 5). This table replaces the seed-0-only table as the sensitivity result for the paper.
