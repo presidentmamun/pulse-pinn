@@ -254,3 +254,26 @@ B3dc (B3 at level d, with the cuff SBP shifted by -7.5 mmHg; 3 seeds, same rng a
 - Paired median difference -3.73 [-4.00, -3.66]; B3dc is better in 106/106 cases.
 - SBP err -0.08 (was +7.44). abs beta err 0.045 (was 0.156).
 - Caveat: 7.5 mmHg is the mean of the twin's simulated bias (mean actual bias 7.48), so this is an oracle-ish prior. The next step is a sensitivity sweep over shift = 0, 2.5, 5, 10 and a per-case misspecified bias.
+
+## 2026-11-16 (afternoon): shift sensitivity of the level-d cuff-bias correction (B3dc, seed 0)
+
+Question: does B3dc only work because the -7.5 mmHg prior is close to the true mean cuff bias (7.48)?
+Runs: `scripts/shift_sweep_1116.py` (B3dc, 8 harmonics, 8000 iters, seed 0, 106 cases) with shift 2.5, 5 and 10;
+shift 0 = plain B3 level d, shift 7.5 from the overnight run. The shift-10 run aborted once at 13:06
+(Fortran runtime "window-CLOSE event", no fits saved; not a code or GPU fault) and was rerun detached at 14:10.
+Rows are in reports/phase5/dcorr.jsonl (`shift` column). True per-case cuff bias is 5-10 mmHg.
+
+| shift | median RMSE [95% CI] | median SBP err | median abs beta err | paired diff vs level d [95% CI] | better | median abs prior err |
+|---|---|---|---|---|---|---|
+| 0 (level d) | 5.07 [4.73, 5.44] | +7.13 | 0.152 | - | - | - |
+| 2.5 | 3.56 [3.22, 3.96] | +4.61 | 0.110 | -1.55 [-1.59, -1.49] | 101/106 | 4.58 |
+| 5 | 2.16 [1.91, 2.55] | +2.09 | 0.060 | -2.94 [-3.01, -2.88] | 103/106 | 2.08 |
+| 7.5 | 1.40 [1.28, 1.67] | -0.41 | 0.056 | -3.98 [-4.11, -3.63] | 104/106 | 1.44 |
+| 10 | 1.94 [1.70, 2.14] | -2.92 | 0.108 | -3.29 [-4.04, -2.88] | 100/106 | 2.92 |
+
+Pooled over the four shifts, RMSE grows roughly linearly with the case-specific prior error |shift - cuff_bias|
+(r = 0.68, slope 0.55 mmHg per mmHg, intercept 0.89): |err| 0-1 -> 1.00, 1-2 -> 1.34, 2-3 -> 1.82, 3-4 -> 2.30, 4-6 -> 3.20.
+Takeaways: (1) every prior tested beats no correction in >=100/106 cases, so the gain is not an oracle artefact;
+(2) the residual SBP error tracks the prior's bias almost one-to-one and is partly absorbed (slope < 1);
+(3) over- and under-shooting by ~2.5 mmHg cost about the same. For the paper, report B3dc with a population prior
+and this curve as the sensitivity analysis. Next: same sweep for seeds 1-2 if CIs are needed per shift.
