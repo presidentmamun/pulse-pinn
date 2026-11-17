@@ -349,3 +349,17 @@ Changing the assumed cuff by about 10 mmHg moves the median by about 0.1 m/s (3%
 ### Twin: cuff-bias correction for CPCv2 (CPCv2dc, prior 7.5 mmHg, seeds 0-2, 318 fits)
 RMSE 1.68 [1.45, 1.89] vs CPCv2 level d 5.26; paired difference -3.76 [-3.97, -3.54]; better in 292/318 (92%); SBP err -0.2.
 The correction works for both models (B3dc: 1.38, better in 316/318).
+
+## 2026-11-17 (day): why the PINN under-read PWV on real data — static site offsets, not noise
+Real D(t) statistics (reports/phase6/beats.json): beat period CV 9-22%, pulse-amplitude CV 8-26%, slow baseline drift 47-92% of
+the pulse amplitude (breathing / probe motion). The twin has none of these.
+- Drift removal at the beat feet + ensemble-averaged beat (B3ens) cuts the real data loss a lot (s01 61 -> 7, s05 34 -> 3.6)
+  but c0 drops further (1.5-3.5 m/s, s10 7.3). Per-beat fits (B3beat) agree with the ensemble. So noise was not the cause.
+- With the tube law used, c0^2 = PP / (2 rho dD/D), the same as Bramwell-Hill, so the fit had to be seeing extra "dynamics".
+  The 9 sites differ statically (taper, tracking offsets ~3% of D). The twin's sites share one mean; the PINN reads the real
+  site-to-site offsets as a spatial pressure gradient and biases beta low.
+- Fix: scale every site to the common mean diameter before fitting (B3ensnorm). c0 (m/s) vs Bramwell-Hill:
+  s01 4.52/4.59, s02 6.04/4.45, s04 5.01/6.22, s05 6.27/4.72, s06 7.46/6.27, s07 4.89/4.39, s08 6.36/6.22, s10 6.97/4.75.
+  All 8 now in a physiological range (4.5-7.5 m/s; the implausible 1.5-1.9 m/s values are gone).
+- Running (09:37): twin with real-like imperfections (phase6_twin_realnoise.py, 40 cases x 7 conditions incl. "taper"
+  and "taperfix") to confirm the mechanism where the true beta is known.
